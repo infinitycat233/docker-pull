@@ -232,35 +232,7 @@ async function handleDownload(request: Request, env: Env): Promise<Response> {
       );
     }
 
-    // 检查缓存（暂时禁用以调试核心功能）
-    const cacheKey = `${image}-${platform}`;
-    let cachedData: ArrayBuffer | null = null;
-
-    // 暂时禁用缓存
-    if (false && env.DOCKER_CACHE) {
-      try {
-        const cached = await env.DOCKER_CACHE.get(cacheKey);
-        if (cached) {
-          console.log("Cache hit for:", cacheKey);
-          cachedData = await cached.arrayBuffer();
-        }
-      } catch (error) {
-        console.warn("Cache read error:", error);
-      }
-    }
-
-    if (cachedData) {
-      return new Response(cachedData, {
-        headers: {
-          "Content-Type": "application/octet-stream",
-          "Content-Disposition": `attachment; filename="${image.replace(
-            /[^a-zA-Z0-9.-]/g,
-            "_"
-          )}.tar"`,
-          "Cache-Control": "public, max-age=86400", // 24小时缓存
-        },
-      });
-    }
+    // 缓存已暂时禁用以调试核心下载功能
 
     // 创建Docker Registry客户端
     const registryClient = new DockerRegistryClient();
@@ -276,8 +248,7 @@ async function handleDownload(request: Request, env: Env): Promise<Response> {
         platform,
         username,
         password,
-        env,
-        cacheKey
+        env
       );
     }
 
@@ -288,8 +259,7 @@ async function handleDownload(request: Request, env: Env): Promise<Response> {
       platform,
       username,
       password,
-      env,
-      cacheKey
+      env
     );
   } catch (error) {
     console.error("Download error:", error);
@@ -316,8 +286,7 @@ async function downloadWithClient(
   platform: string,
   username?: string,
   password?: string,
-  env?: Env,
-  cacheKey?: string
+  env?: Env
 ): Promise<Response> {
   // 获取认证token
   const token = await client.getAuthToken(repository, username, password);
@@ -424,25 +393,7 @@ async function downloadWithClient(
     `${repository}:${tag}`
   );
 
-  // 缓存结果（暂时禁用）
-  if (false && env?.DOCKER_CACHE && cacheKey) {
-    try {
-      // 将 ArrayBuffer 转换为 Uint8Array 以确保兼容性
-      const cacheData =
-        tarData instanceof ArrayBuffer ? new Uint8Array(tarData) : tarData;
-      await env.DOCKER_CACHE.put(cacheKey, cacheData, {
-        httpMetadata: {
-          contentType: "application/octet-stream",
-        },
-        customMetadata: {
-          createdAt: new Date().toISOString(),
-        },
-      });
-      console.log("Cached:", cacheKey);
-    } catch (error) {
-      console.warn("Cache write error:", error);
-    }
-  }
+  // 缓存功能暂时移除
 
   return new Response(tarData, {
     headers: {
