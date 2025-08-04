@@ -428,7 +428,8 @@ async function downloadWithClient(
   if (false && env?.DOCKER_CACHE && cacheKey) {
     try {
       // 将 ArrayBuffer 转换为 Uint8Array 以确保兼容性
-      const cacheData = tarData instanceof ArrayBuffer ? new Uint8Array(tarData) : tarData;
+      const cacheData =
+        tarData instanceof ArrayBuffer ? new Uint8Array(tarData) : tarData;
       await env.DOCKER_CACHE.put(cacheKey, cacheData, {
         httpMetadata: {
           contentType: "application/octet-stream",

@@ -197,7 +197,7 @@ export class DockerRegistryClient {
     try {
       const url = `${this.baseUrl}/v2/${repository}/blobs/${digest}`;
       const headers: Record<string, string> = {
-        "Accept": "application/octet-stream, */*",
+        Accept: "application/octet-stream, */*",
         "User-Agent": "docker/1.0",
       };
 
