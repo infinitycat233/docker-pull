@@ -1,0 +1,52 @@
+# Cloudflare Workers 配置示例文件
+# 复制此文件为 wrangler.toml 并根据需要修改
+
+name = "docker-image-downloader"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# 开发环境
+[env.dev]
+name = "docker-image-downloader-dev"
+vars = { ENVIRONMENT = "development" }
+
+# 生产环境
+[env.production]
+name = "docker-image-downloader-prod"
+vars = { ENVIRONMENT = "production" }
+
+# R2 存储桶配置（可选，用于缓存）
+# 取消注释并填入实际的存储桶名称
+# [[env.production.r2_buckets]]
+# binding = "DOCKER_CACHE"
+# bucket_name = "docker-image-cache"
+
+# KV 命名空间配置（可选，用于元数据）
+# 取消注释并填入实际的KV命名空间ID
+# [[env.production.kv_namespaces]]
+# binding = "METADATA"
+# id = "your-kv-namespace-id-here"
+
+# 构建配置
+[build]
+command = "npm run build"
+
+# Cron触发器示例（可选，用于清理缓存）
+# [[env.production.triggers]]
+# cron = "0 2 * * *"  # 每天凌晨2点执行
+
+# 自定义域名配置示例
+# [env.production]
+# routes = [
+#   { pattern = "docker.example.com", custom_domain = true }
+# ]
+
+# 环境变量示例（敏感信息请使用 wrangler secret put 命令）
+# [env.production.vars]
+# API_VERSION = "v1"
+# MAX_FILE_SIZE = "500000000"  # 500MB
+
+# Workers分析配置
+# [env.production]
+# analytics = true
