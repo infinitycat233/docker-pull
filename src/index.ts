@@ -232,11 +232,12 @@ async function handleDownload(request: Request, env: Env): Promise<Response> {
       );
     }
 
-    // 检查缓存
+    // 检查缓存（暂时禁用以调试核心功能）
     const cacheKey = `${image}-${platform}`;
     let cachedData: ArrayBuffer | null = null;
 
-    if (env.DOCKER_CACHE) {
+    // 暂时禁用缓存
+    if (false && env.DOCKER_CACHE) {
       try {
         const cached = await env.DOCKER_CACHE.get(cacheKey);
         if (cached) {
@@ -423,11 +424,18 @@ async function downloadWithClient(
     `${repository}:${tag}`
   );
 
-  // 缓存结果
-  if (env?.DOCKER_CACHE && cacheKey) {
+  // 缓存结果（暂时禁用）
+  if (false && env?.DOCKER_CACHE && cacheKey) {
     try {
-      await env.DOCKER_CACHE.put(cacheKey, tarData, {
-        expirationTtl: 86400, // 24小时
+      // 将 ArrayBuffer 转换为 Uint8Array 以确保兼容性
+      const cacheData = tarData instanceof ArrayBuffer ? new Uint8Array(tarData) : tarData;
+      await env.DOCKER_CACHE.put(cacheKey, cacheData, {
+        httpMetadata: {
+          contentType: "application/octet-stream",
+        },
+        customMetadata: {
+          createdAt: new Date().toISOString(),
+        },
       });
       console.log("Cached:", cacheKey);
     } catch (error) {

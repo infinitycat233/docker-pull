@@ -196,7 +196,10 @@ export class DockerRegistryClient {
   ): Promise<ArrayBuffer | null> {
     try {
       const url = `${this.baseUrl}/v2/${repository}/blobs/${digest}`;
-      const headers: Record<string, string> = {};
+      const headers: Record<string, string> = {
+        "Accept": "application/octet-stream, */*",
+        "User-Agent": "docker/1.0",
+      };
 
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;

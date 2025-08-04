@@ -35,3 +35,7 @@ id = "your-kv-namespace-id"
 
 [build]
 command = "npm run build"
+
+# wrangler.toml (wrangler v3.88.0^)
+[observability.logs]
+enabled = true
