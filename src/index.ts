@@ -210,7 +210,8 @@ async function handleStreamingDownload(request: Request): Promise<Response> {
 async function handleDownload(request: Request): Promise<Response> {
   if (request.method === "GET") {
     // GET 请求返回测试表单
-    return new Response(`
+    return new Response(
+      `
       <!DOCTYPE html>
       <html>
       <head>
@@ -289,13 +290,17 @@ async function handleDownload(request: Request): Promise<Response> {
         </script>
       </body>
       </html>
-    `, {
-      headers: { "Content-Type": "text/html" },
-    });
+    `,
+      {
+        headers: { "Content-Type": "text/html" },
+      }
+    );
   }
-  
+
   if (request.method !== "POST") {
-    return new Response("Method Not Allowed - Use POST request", { status: 405 });
+    return new Response("Method Not Allowed - Use POST request", {
+      status: 405,
+    });
   }
 
   try {
@@ -425,20 +430,44 @@ async function downloadWithClient(
   // 下载config
   let configData: ArrayBuffer | null = null;
   if (manifest.config) {
+    console.log("Downloading config:", {
+      repository,
+      digest: manifest.config.digest,
+      mediaType: manifest.config.mediaType,
+      size: manifest.config.size,
+    });
+    
     configData = await client.downloadBlob(
       repository,
       manifest.config.digest,
       token || undefined
     );
+    
     if (!configData) {
+      console.error("Config download failed:", {
+        repository,
+        digest: manifest.config.digest,
+        hasToken: !!token,
+      });
       return new Response(
-        JSON.stringify({ error: "Failed to download config" }),
+        JSON.stringify({ 
+          error: "Failed to download config",
+          details: {
+            repository,
+            digest: manifest.config.digest,
+            hasToken: !!token,
+          }
+        }),
         {
           status: 500,
           headers: { "Content-Type": "application/json" },
         }
       );
     }
+    
+    console.log("Config downloaded successfully:", {
+      size: configData.byteLength,
+    });
   } else {
     // Schema v1 compatibility - 创建最小配置
     const minimalConfig = {
