@@ -49,6 +49,12 @@ export default {
         case "/api/image-details":
           return handleImageDetails(request);
 
+        case "/api/test":
+          return handleTest(request);
+
+        case "/api/test-docker":
+          return handleDockerTest(request);
+
         case "/health":
           return handleHealth();
 
@@ -477,6 +483,108 @@ async function handleImageDetails(request: Request): Promise<Response> {
       JSON.stringify({
         error: "Failed to fetch image details",
         message: error instanceof Error ? error.message : "Unknown error",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+}
+
+/**
+ * 处理测试请求 - 用于诊断AWS错误
+ */
+async function handleTest(request: Request): Promise<Response> {
+  try {
+    console.log("=== TEST REQUEST START ===");
+    console.log("Method:", request.method);
+    console.log("URL:", request.url);
+    console.log("Headers:", Object.fromEntries(request.headers.entries()));
+    
+    // 测试一个简单的外部HTTP请求
+    const testUrl = "https://httpbin.org/json";
+    console.log("Testing simple HTTP request to:", testUrl);
+    
+    const response = await fetch(testUrl);
+    const data = await response.json();
+    
+    console.log("Test response status:", response.status);
+    console.log("Test response headers:", Object.fromEntries(response.headers.entries()));
+    console.log("=== TEST REQUEST END ===");
+    
+    return new Response(
+      JSON.stringify({
+        status: "test_success",
+        testUrl,
+        responseStatus: response.status,
+        data,
+        timestamp: new Date().toISOString(),
+      }),
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (error) {
+    console.error("=== TEST ERROR ===", error);
+    return new Response(
+      JSON.stringify({
+        status: "test_error",
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+}
+
+/**
+ * 测试Docker Registry连接 - 只获取manifest，不下载blob
+ */
+async function handleDockerTest(request: Request): Promise<Response> {
+  try {
+    console.log("=== DOCKER TEST START ===");
+    
+    const registryClient = new DockerRegistryClient();
+    const image = "hello-world:latest";
+    const { repository, tag } = registryClient.parseImageName(image);
+    
+    console.log("Testing Docker Registry connection:");
+    console.log("Repository:", repository);
+    console.log("Tag:", tag);
+    console.log("Registry URL:", "https://registry-1.docker.io");
+    
+    // 只测试获取manifest，不下载任何blob
+    const manifest = await registryClient.getManifest(repository, tag);
+    
+    console.log("Manifest retrieved successfully");
+    console.log("Manifest type:", manifest?.mediaType || "unknown");
+    console.log("=== DOCKER TEST END ===");
+    
+    return new Response(
+      JSON.stringify({
+        status: "docker_test_success",
+        image,
+        repository,
+        tag,
+        manifestType: manifest?.mediaType || "unknown",
+        hasManifest: !!manifest,
+        timestamp: new Date().toISOString(),
+      }),
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (error) {
+    console.error("=== DOCKER TEST ERROR ===", error);
+    return new Response(
+      JSON.stringify({
+        status: "docker_test_error",
+        error: error.message,
+        timestamp: new Date().toISOString(),
       }),
       {
         status: 500,
