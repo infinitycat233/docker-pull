@@ -198,7 +198,7 @@ export class DockerRegistryClient {
       const url = `${this.baseUrl}/v2/${repository}/blobs/${digest}`;
       const headers: Record<string, string> = {
         Accept: "application/octet-stream, application/vnd.docker.image.rootfs.diff.tar.gzip, */*",
-        "User-Agent": "docker/20.10.0 go/go1.13.15 git-commit/7287ab3 kernel/5.4.0-1043-azure os/linux arch/amd64 UpstreamClient(Docker-Client/20.10.0 \\(linux\\))",
+        "User-Agent": "docker-pull-worker/1.0",
       };
 
       if (token) {
@@ -213,7 +213,14 @@ export class DockerRegistryClient {
         baseUrl: this.baseUrl,
         headers: Object.keys(headers),
       });
-      const response = await fetch(url, { headers });
+      
+      // Add timeout and proper fetch options
+      const response = await fetch(url, { 
+        headers,
+        method: 'GET',
+        redirect: 'follow',
+        signal: AbortSignal.timeout(30000) // 30 second timeout
+      });
 
       if (!response.ok) {
         console.error(`Blob download failed: ${response.status}`, {
@@ -222,14 +229,25 @@ export class DockerRegistryClient {
           digest,
           hasToken: !!token,
           statusText: response.statusText,
+          redirected: response.redirected,
+          finalUrl: response.url,
         });
 
         // 尝试读取错误响应内容
         try {
           const errorText = await response.text();
           console.error("Error response body:", errorText);
+          
+          // 特殊处理401认证错误
+          if (response.status === 401) {
+            console.error("Authentication failed - token may be invalid or expired");
+          }
+          // 特殊处理400错误
+          else if (response.status === 400) {
+            console.error("Bad request - check digest format and headers");
+          }
         } catch (e) {
-          console.error("Could not read error response body");
+          console.error("Could not read error response body:", e);
         }
 
         return null;
