@@ -16,7 +16,7 @@ bucket_name = "docker-image-cache-dev"
 # KV namespace for dev metadata
 [[env.dev.kv_namespaces]]
 binding = "METADATA"
-id = "your-dev-kv-namespace-id"
+id = "435a3139299a401883eb33b900f24387"
 
 # Production environment
 [env.production]
