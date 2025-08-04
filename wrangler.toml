@@ -13,25 +13,25 @@ vars = { ENVIRONMENT = "development" }
 #binding = "DOCKER_CACHE"
 #bucket_name = "docker-image-cache-dev"
 
-# KV namespace for dev metadata
-[[env.dev.kv_namespaces]]
-binding = "METADATA"
-id = "435a3139299a401883eb33b900f24387"
+# KV namespace for dev metadata (disabled)
+#[[env.dev.kv_namespaces]]
+#binding = "METADATA"
+#id = "435a3139299a401883eb33b900f24387"
 
 # Production environment
 [env.production]
 name = "docker-image-downloader-prod"
 vars = { ENVIRONMENT = "production" }
 
-# Bindings for R2 storage (optional for caching)
-[[env.production.r2_buckets]]
-binding = "DOCKER_CACHE"
-bucket_name = "docker-image-cache"
+# Bindings for R2 storage (disabled)
+#[[env.production.r2_buckets]]
+#binding = "DOCKER_CACHE"
+#bucket_name = "docker-image-cache"
 
-# KV namespace for metadata
-[[env.production.kv_namespaces]]
-binding = "METADATA"
-id = "your-kv-namespace-id"
+# KV namespace for metadata (disabled)
+#[[env.production.kv_namespaces]]
+#binding = "METADATA"
+#id = "your-kv-namespace-id"
 
 [build]
 command = "npm run build"

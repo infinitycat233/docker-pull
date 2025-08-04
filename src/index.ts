@@ -141,9 +141,7 @@ async function handleSearch(request: Request): Promise<Response> {
 /**
  * 处理流式镜像下载（支持大镜像）
  */
-async function handleStreamingDownload(
-  request: Request
-): Promise<Response> {
+async function handleStreamingDownload(request: Request): Promise<Response> {
   if (request.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
   }

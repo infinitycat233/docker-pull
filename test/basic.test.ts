@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import worker from "../src/index";
 
 // Mock environment
-  const env = {
-    METADATA: undefined,
-  };
+const env = {
+  METADATA: undefined,
+};
 
 // Mock execution context
 const ctx = {

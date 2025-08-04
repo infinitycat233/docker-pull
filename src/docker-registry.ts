@@ -210,6 +210,8 @@ export class DockerRegistryClient {
         repository,
         digest,
         hasToken: !!token,
+        baseUrl: this.baseUrl,
+        headers: Object.keys(headers),
       });
       const response = await fetch(url, { headers });
 
