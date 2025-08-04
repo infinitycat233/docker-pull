@@ -13,6 +13,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: Test
+    defaults:
+      run:
+        working-directory: ./cloudflare-worker
 
     steps:
       - name: Checkout
@@ -23,6 +26,7 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
+          cache-dependency-path: "./cloudflare-worker/package-lock.json"
 
       - name: Install dependencies
         run: npm ci
@@ -38,6 +42,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy to Staging
     if: github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: ./cloudflare-worker
 
     steps:
       - name: Checkout
@@ -48,6 +55,7 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
+          cache-dependency-path: "./cloudflare-worker/package-lock.json"
 
       - name: Install dependencies
         run: npm ci
@@ -60,12 +68,16 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           environment: "dev"
+          workingDirectory: "./cloudflare-worker"
 
   deploy-production:
     needs: test
     runs-on: ubuntu-latest
     name: Deploy to Production
     if: github.ref == 'refs/heads/production'
+    defaults:
+      run:
+        working-directory: ./cloudflare-worker
 
     steps:
       - name: Checkout
@@ -76,6 +88,7 @@ jobs:
         with:
           node-version: "18"
           cache: "npm"
+          cache-dependency-path: "./cloudflare-worker/package-lock.json"
 
       - name: Install dependencies
         run: npm ci
@@ -88,6 +101,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           environment: "production"
+          workingDirectory: "./cloudflare-worker"
 
       - name: Create Release
         if: success()
