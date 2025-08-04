@@ -436,13 +436,13 @@ async function downloadWithClient(
       mediaType: manifest.config.mediaType,
       size: manifest.config.size,
     });
-    
+
     configData = await client.downloadBlob(
       repository,
       manifest.config.digest,
       token || undefined
     );
-    
+
     if (!configData) {
       console.error("Config download failed:", {
         repository,
@@ -450,13 +450,13 @@ async function downloadWithClient(
         hasToken: !!token,
       });
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: "Failed to download config",
           details: {
             repository,
             digest: manifest.config.digest,
             hasToken: !!token,
-          }
+          },
         }),
         {
           status: 500,
@@ -464,7 +464,7 @@ async function downloadWithClient(
         }
       );
     }
-    
+
     console.log("Config downloaded successfully:", {
       size: configData.byteLength,
     });

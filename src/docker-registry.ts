@@ -197,8 +197,8 @@ export class DockerRegistryClient {
     try {
       const url = `${this.baseUrl}/v2/${repository}/blobs/${digest}`;
       const headers: Record<string, string> = {
-        Accept: "application/octet-stream, */*",
-        "User-Agent": "docker/1.0",
+        Accept: "application/octet-stream, application/vnd.docker.image.rootfs.diff.tar.gzip, */*",
+        "User-Agent": "docker/20.10.0 go/go1.13.15 git-commit/7287ab3 kernel/5.4.0-1043-azure os/linux arch/amd64 UpstreamClient(Docker-Client/20.10.0 \\(linux\\))",
       };
 
       if (token) {
