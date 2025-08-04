@@ -47,7 +47,6 @@ export interface DownloadProgress {
 }
 
 export interface Env {
-  DOCKER_CACHE?: R2Bucket;
   METADATA?: KVNamespace;
 }
 

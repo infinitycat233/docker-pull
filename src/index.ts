@@ -38,10 +38,10 @@ export default {
           return handleSearch(request);
 
         case "/api/download":
-          return handleDownload(request, env);
+          return handleDownload(request);
 
         case "/api/download-stream":
-          return handleStreamingDownload(request, env);
+          return handleStreamingDownload(request);
 
         case "/api/popular":
           return handlePopular();
@@ -142,8 +142,7 @@ async function handleSearch(request: Request): Promise<Response> {
  * 处理流式镜像下载（支持大镜像）
  */
 async function handleStreamingDownload(
-  request: Request,
-  env: Env
+  request: Request
 ): Promise<Response> {
   if (request.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
@@ -177,7 +176,7 @@ async function handleStreamingDownload(
     const { registry } = registryClient.parseImageName(image);
 
     // 创建流式下载处理器
-    const streamHandler = new StreamingDownloadHandler(registry, env);
+    const streamHandler = new StreamingDownloadHandler(registry);
 
     // 执行流式下载
     return await streamHandler.handleStreamingDownload(
@@ -204,7 +203,7 @@ async function handleStreamingDownload(
 /**
  * 处理镜像下载
  */
-async function handleDownload(request: Request, env: Env): Promise<Response> {
+async function handleDownload(request: Request): Promise<Response> {
   if (request.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
   }
@@ -247,8 +246,7 @@ async function handleDownload(request: Request, env: Env): Promise<Response> {
         tag,
         platform,
         username,
-        password,
-        env
+        password
       );
     }
 
@@ -258,8 +256,7 @@ async function handleDownload(request: Request, env: Env): Promise<Response> {
       tag,
       platform,
       username,
-      password,
-      env
+      password
     );
   } catch (error) {
     console.error("Download error:", error);
@@ -285,8 +282,7 @@ async function downloadWithClient(
   tag: string,
   platform: string,
   username?: string,
-  password?: string,
-  env?: Env
+  password?: string
 ): Promise<Response> {
   // 获取认证token
   const token = await client.getAuthToken(repository, username, password);

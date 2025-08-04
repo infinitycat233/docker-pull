@@ -1,16 +1,14 @@
 import { DockerRegistryClient } from "./docker-registry";
-import { DockerManifest, PlatformSelection, Env } from "./types";
+import { DockerManifest, PlatformSelection } from "./types";
 
 /**
  * 流式下载处理器 - 支持大镜像文件
  */
 export class StreamingDownloadHandler {
   private client: DockerRegistryClient;
-  private env: Env;
 
-  constructor(registry: string, env: Env) {
+  constructor(registry: string) {
     this.client = new DockerRegistryClient(registry);
-    this.env = env;
   }
 
   /**
