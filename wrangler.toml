@@ -9,9 +9,9 @@ name = "docker-image-downloader-dev"
 vars = { ENVIRONMENT = "development" }
 
 # Bindings for dev R2 storage (optional for caching)
-[[env.dev.r2_buckets]]
-binding = "DOCKER_CACHE"
-bucket_name = "docker-image-cache-dev"
+#[[env.dev.r2_buckets]]
+#binding = "DOCKER_CACHE"
+#bucket_name = "docker-image-cache-dev"
 
 # KV namespace for dev metadata
 [[env.dev.kv_namespaces]]
