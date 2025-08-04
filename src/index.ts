@@ -238,10 +238,10 @@ async function handleDownload(request: Request, env: Env): Promise<Response> {
 
     if (env.DOCKER_CACHE) {
       try {
-        const cached = await env.DOCKER_CACHE.get(cacheKey, "arrayBuffer");
+        const cached = await env.DOCKER_CACHE.get(cacheKey);
         if (cached) {
           console.log("Cache hit for:", cacheKey);
-          cachedData = cached;
+          cachedData = await cached.arrayBuffer();
         }
       } catch (error) {
         console.warn("Cache read error:", error);
