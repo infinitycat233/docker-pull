@@ -3,6 +3,21 @@ main = "src/index.ts"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Development environment
+[env.dev]
+name = "docker-image-downloader-dev"
+vars = { ENVIRONMENT = "development" }
+
+# Bindings for dev R2 storage (optional for caching)
+[[env.dev.r2_buckets]]
+binding = "DOCKER_CACHE"
+bucket_name = "docker-image-cache-dev"
+
+# KV namespace for dev metadata
+[[env.dev.kv_namespaces]]
+binding = "METADATA"
+id = "your-dev-kv-namespace-id"
+
 # Production environment
 [env.production]
 name = "docker-image-downloader-prod"

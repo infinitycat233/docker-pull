@@ -26,10 +26,18 @@ export class StreamingDownloadHandler {
       const { repository, tag } = this.client.parseImageName(image);
 
       // 获取认证token
-      const token = await this.client.getAuthToken(repository, username, password);
+      const token = await this.client.getAuthToken(
+        repository,
+        username,
+        password
+      );
 
       // 获取manifest
-      let manifest = await this.client.getManifest(repository, tag, token || undefined);
+      let manifest = await this.client.getManifest(
+        repository,
+        tag,
+        token || undefined
+      );
       if (!manifest) {
         throw new Error("Failed to fetch manifest");
       }
@@ -37,24 +45,44 @@ export class StreamingDownloadHandler {
       // 处理多架构镜像
       if (manifest.manifests) {
         const [os, architecture, variant] = platform.split("/");
-        const platformSelection: PlatformSelection = { os, architecture, variant };
-        
-        const selectedDigest = this.client.selectPlatformManifest(manifest, platformSelection);
+        const platformSelection: PlatformSelection = {
+          os,
+          architecture,
+          variant,
+        };
+
+        const selectedDigest = this.client.selectPlatformManifest(
+          manifest,
+          platformSelection
+        );
         if (!selectedDigest) {
           throw new Error(`No manifest found for platform ${platform}`);
         }
 
-        manifest = await this.client.getManifest(repository, selectedDigest, token || undefined);
+        manifest = await this.client.getManifest(
+          repository,
+          selectedDigest,
+          token || undefined
+        );
         if (!manifest) {
           throw new Error("Failed to fetch platform-specific manifest");
         }
       }
 
       // 创建流式响应
-      return this.createStreamingResponse(manifest, repository, tag, token, image);
-
+      return this.createStreamingResponse(
+        manifest,
+        repository,
+        tag,
+        token,
+        image
+      );
     } catch (error) {
-      throw new Error(`Streaming download failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Streaming download failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
@@ -68,7 +96,6 @@ export class StreamingDownloadHandler {
     token: string | null,
     imageName: string
   ): Promise<Response> {
-    
     const stream = new ReadableStream({
       async start(controller) {
         try {
@@ -77,7 +104,12 @@ export class StreamingDownloadHandler {
 
           // 流式写入config
           if (manifest.config) {
-            await this.writeConfigToStream(controller, repository, manifest.config.digest, token);
+            await this.writeConfigToStream(
+              controller,
+              repository,
+              manifest.config.digest,
+              token
+            );
           } else {
             await this.writeMinimalConfig(controller, imageName);
           }
@@ -85,7 +117,13 @@ export class StreamingDownloadHandler {
           // 流式写入所有层
           const layers = manifest.layers || [];
           for (let i = 0; i < layers.length; i++) {
-            await this.writeLayerToStream(controller, repository, layers[i].digest, token, i);
+            await this.writeLayerToStream(
+              controller,
+              repository,
+              layers[i].digest,
+              token,
+              i
+            );
           }
 
           // 写入TAR结尾
@@ -95,13 +133,16 @@ export class StreamingDownloadHandler {
         } catch (error) {
           controller.error(error);
         }
-      }
+      },
     });
 
     return new Response(stream, {
       headers: {
         "Content-Type": "application/octet-stream",
-        "Content-Disposition": `attachment; filename="${imageName.replace(/[^a-zA-Z0-9.-]/g, '_')}.tar"`,
+        "Content-Disposition": `attachment; filename="${imageName.replace(
+          /[^a-zA-Z0-9.-]/g,
+          "_"
+        )}.tar"`,
         "Transfer-Encoding": "chunked",
         "Cache-Control": "no-cache", // 大文件不缓存
       },
@@ -117,13 +158,18 @@ export class StreamingDownloadHandler {
     imageName: string
   ): Promise<void> {
     // 创建manifest.json
-    const manifestJson = JSON.stringify([{
-      Config: "config.json",
-      RepoTags: [imageName],
-      Layers: (manifest.layers || []).map((_, index) => `layer_${index}.tar`)
-    }]);
+    const manifestJson = JSON.stringify([
+      {
+        Config: "config.json",
+        RepoTags: [imageName],
+        Layers: (manifest.layers || []).map((_, index) => `layer_${index}.tar`),
+      },
+    ]);
 
-    const manifestHeader = this.createTarHeader("manifest.json", manifestJson.length);
+    const manifestHeader = this.createTarHeader(
+      "manifest.json",
+      manifestJson.length
+    );
     controller.enqueue(manifestHeader);
     controller.enqueue(new TextEncoder().encode(manifestJson));
     controller.enqueue(this.createPadding(manifestJson.length));
@@ -138,12 +184,19 @@ export class StreamingDownloadHandler {
     digest: string,
     token: string | null
   ): Promise<void> {
-    const configData = await this.client.downloadBlob(repository, digest, token || undefined);
+    const configData = await this.client.downloadBlob(
+      repository,
+      digest,
+      token || undefined
+    );
     if (!configData) {
       throw new Error("Failed to download config");
     }
 
-    const configHeader = this.createTarHeader("config.json", configData.byteLength);
+    const configHeader = this.createTarHeader(
+      "config.json",
+      configData.byteLength
+    );
     controller.enqueue(configHeader);
     controller.enqueue(new Uint8Array(configData));
     controller.enqueue(this.createPadding(configData.byteLength));
@@ -159,10 +212,10 @@ export class StreamingDownloadHandler {
     const minimalConfig = {
       architecture: "amd64",
       os: "linux",
-      history: []
+      history: [],
     };
     const configJson = JSON.stringify(minimalConfig);
-    
+
     const configHeader = this.createTarHeader("config.json", configJson.length);
     controller.enqueue(configHeader);
     controller.enqueue(new TextEncoder().encode(configJson));
@@ -179,12 +232,12 @@ export class StreamingDownloadHandler {
     token: string | null,
     layerIndex: number
   ): Promise<void> {
-    
     // 使用fetch API的stream功能直接流式传输
-    const registryUrl = this.client['baseUrl'] || `https://registry-1.docker.io`;
+    const registryUrl =
+      this.client["baseUrl"] || `https://registry-1.docker.io`;
     const url = `${registryUrl}/v2/${repository}/blobs/${digest}`;
     const headers: Record<string, string> = {};
-    
+
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
@@ -194,10 +247,15 @@ export class StreamingDownloadHandler {
       throw new Error(`Failed to download layer ${digest}: ${response.status}`);
     }
 
-    const contentLength = parseInt(response.headers.get('content-length') || '0');
-    
+    const contentLength = parseInt(
+      response.headers.get("content-length") || "0"
+    );
+
     // 写入层的TAR头部
-    const layerHeader = this.createTarHeader(`layer_${layerIndex}.tar`, contentLength);
+    const layerHeader = this.createTarHeader(
+      `layer_${layerIndex}.tar`,
+      contentLength
+    );
     controller.enqueue(layerHeader);
 
     // 流式传输层数据
@@ -221,7 +279,9 @@ export class StreamingDownloadHandler {
   /**
    * 写入TAR结尾
    */
-  private async writeTarFooter(controller: ReadableStreamDefaultController): Promise<void> {
+  private async writeTarFooter(
+    controller: ReadableStreamDefaultController
+  ): Promise<void> {
     // TAR格式要求两个空的512字节块作为结尾
     const footer = new Uint8Array(1024);
     controller.enqueue(footer);
@@ -232,29 +292,32 @@ export class StreamingDownloadHandler {
    */
   private createTarHeader(filename: string, size: number): Uint8Array {
     const header = new Uint8Array(512);
-    
+
     // 文件名 (100字节)
     const nameBytes = new TextEncoder().encode(filename);
     header.set(nameBytes, 0);
-    
+
     // 文件模式 (8字节)
     header.set(new TextEncoder().encode("0000644\0"), 100);
-    
+
     // 用户ID和组ID (各8字节)
     header.set(new TextEncoder().encode("0000000\0"), 108);
     header.set(new TextEncoder().encode("0000000\0"), 116);
-    
+
     // 文件大小 (12字节，8进制)
     const sizeOctal = size.toString(8).padStart(11, "0") + "\0";
     header.set(new TextEncoder().encode(sizeOctal), 124);
-    
+
     // 修改时间 (12字节，8进制)
-    const mtime = Math.floor(Date.now() / 1000).toString(8).padStart(11, "0") + "\0";
+    const mtime =
+      Math.floor(Date.now() / 1000)
+        .toString(8)
+        .padStart(11, "0") + "\0";
     header.set(new TextEncoder().encode(mtime), 136);
-    
+
     // 类型标志 (1字节) - 普通文件
     header[156] = 48; // '0'
-    
+
     // 计算校验和
     let checksum = 0;
     for (let i = 0; i < 512; i++) {
@@ -262,7 +325,7 @@ export class StreamingDownloadHandler {
     }
     const checksumOctal = checksum.toString(8).padStart(6, "0") + "\0 ";
     header.set(new TextEncoder().encode(checksumOctal), 148);
-    
+
     return header;
   }
 
