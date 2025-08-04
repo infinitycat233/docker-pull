@@ -36,9 +36,9 @@ export class DockerRegistryClient {
           authUrl,
           repository,
           hasCredentials: !!(username && password),
-          statusText: response.statusText
+          statusText: response.statusText,
         });
-        
+
         // 尝试读取认证错误响应
         try {
           const errorText = await response.text();
@@ -46,7 +46,7 @@ export class DockerRegistryClient {
         } catch (e) {
           console.error("Could not read auth error response");
         }
-        
+
         return null;
       }
 
@@ -202,7 +202,12 @@ export class DockerRegistryClient {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      console.log("Downloading blob:", { url, repository, digest, hasToken: !!token });
+      console.log("Downloading blob:", {
+        url,
+        repository,
+        digest,
+        hasToken: !!token,
+      });
       const response = await fetch(url, { headers });
 
       if (!response.ok) {
@@ -211,9 +216,9 @@ export class DockerRegistryClient {
           repository,
           digest,
           hasToken: !!token,
-          statusText: response.statusText
+          statusText: response.statusText,
         });
-        
+
         // 尝试读取错误响应内容
         try {
           const errorText = await response.text();
@@ -221,7 +226,7 @@ export class DockerRegistryClient {
         } catch (e) {
           console.error("Could not read error response body");
         }
-        
+
         return null;
       }
 
