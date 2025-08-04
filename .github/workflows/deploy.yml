@@ -15,7 +15,7 @@ jobs:
     name: Test
     defaults:
       run:
-        working-directory: ./cloudflare-worker
+        working-directory: cloudflare-worker
 
     steps:
       - name: Checkout
@@ -43,7 +43,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     defaults:
       run:
-        working-directory: ./cloudflare-worker
+        working-directory: cloudflare-worker
 
     steps:
       - name: Checkout
@@ -66,7 +66,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           environment: "dev"
-          workingDirectory: "./cloudflare-worker"
+          workingDirectory: "cloudflare-worker"
 
   deploy-production:
     needs: test
@@ -75,7 +75,7 @@ jobs:
     if: github.ref == 'refs/heads/production'
     defaults:
       run:
-        working-directory: ./cloudflare-worker
+        working-directory: cloudflare-worker
 
     steps:
       - name: Checkout
@@ -98,7 +98,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           environment: "production"
-          workingDirectory: "./cloudflare-worker"
+          workingDirectory: "cloudflare-worker"
 
       - name: Create Release
         if: success()
