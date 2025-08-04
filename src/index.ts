@@ -208,8 +208,94 @@ async function handleStreamingDownload(request: Request): Promise<Response> {
  * 处理镜像下载
  */
 async function handleDownload(request: Request): Promise<Response> {
+  if (request.method === "GET") {
+    // GET 请求返回测试表单
+    return new Response(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Docker Image Download Test</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+          .form-group { margin: 15px 0; }
+          label { display: block; margin-bottom: 5px; font-weight: bold; }
+          input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+          button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+          button:hover { background: #005a87; }
+          .result { margin-top: 20px; padding: 10px; border-radius: 4px; }
+          .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+          .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        </style>
+      </head>
+      <body>
+        <h1>🐳 Docker Image Download Test</h1>
+        <p>Test the Docker image download functionality:</p>
+        
+        <form id="downloadForm">
+          <div class="form-group">
+            <label for="image">Docker Image:</label>
+            <input type="text" id="image" name="image" value="hello-world:latest" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="platform">Platform:</label>
+            <select id="platform" name="platform">
+              <option value="linux/amd64">linux/amd64</option>
+              <option value="linux/arm64">linux/arm64</option>
+              <option value="linux/arm/v7">linux/arm/v7</option>
+            </select>
+          </div>
+          
+          <button type="submit">Download Image</button>
+        </form>
+        
+        <div id="result"></div>
+        
+        <script>
+          document.getElementById('downloadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            resultDiv.innerHTML = '<p>Downloading...</p>';
+            
+            try {
+              const response = await fetch('/api/download', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+              });
+              
+              if (response.ok) {
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = data.image.replace(/[^a-zA-Z0-9.-]/g, '_') + '.tar';
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                resultDiv.innerHTML = '<div class="result success">✅ Download completed successfully!</div>';
+              } else {
+                const errorText = await response.text();
+                resultDiv.innerHTML = '<div class="result error">❌ Download failed: ' + errorText + '</div>';
+              }
+            } catch (error) {
+              resultDiv.innerHTML = '<div class="result error">❌ Error: ' + error.message + '</div>';
+            }
+          });
+        </script>
+      </body>
+      </html>
+    `, {
+      headers: { "Content-Type": "text/html" },
+    });
+  }
+  
   if (request.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
+    return new Response("Method Not Allowed - Use POST request", { status: 405 });
   }
 
   try {
@@ -501,18 +587,21 @@ async function handleTest(request: Request): Promise<Response> {
     console.log("Method:", request.method);
     console.log("URL:", request.url);
     console.log("Headers:", Object.fromEntries(request.headers.entries()));
-    
+
     // 测试一个简单的外部HTTP请求
     const testUrl = "https://httpbin.org/json";
     console.log("Testing simple HTTP request to:", testUrl);
-    
+
     const response = await fetch(testUrl);
     const data = await response.json();
-    
+
     console.log("Test response status:", response.status);
-    console.log("Test response headers:", Object.fromEntries(response.headers.entries()));
+    console.log(
+      "Test response headers:",
+      Object.fromEntries(response.headers.entries())
+    );
     console.log("=== TEST REQUEST END ===");
-    
+
     return new Response(
       JSON.stringify({
         status: "test_success",
@@ -547,23 +636,23 @@ async function handleTest(request: Request): Promise<Response> {
 async function handleDockerTest(request: Request): Promise<Response> {
   try {
     console.log("=== DOCKER TEST START ===");
-    
+
     const registryClient = new DockerRegistryClient();
     const image = "hello-world:latest";
     const { repository, tag } = registryClient.parseImageName(image);
-    
+
     console.log("Testing Docker Registry connection:");
     console.log("Repository:", repository);
     console.log("Tag:", tag);
     console.log("Registry URL:", "https://registry-1.docker.io");
-    
+
     // 只测试获取manifest，不下载任何blob
     const manifest = await registryClient.getManifest(repository, tag);
-    
+
     console.log("Manifest retrieved successfully");
     console.log("Manifest type:", manifest?.mediaType || "unknown");
     console.log("=== DOCKER TEST END ===");
-    
+
     return new Response(
       JSON.stringify({
         status: "docker_test_success",
