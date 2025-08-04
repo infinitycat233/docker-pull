@@ -95,7 +95,7 @@ export class StreamingDownloadHandler {
         } catch (error) {
           controller.error(error);
         }
-      }.bind(this)
+      }
     });
 
     return new Response(stream, {
@@ -112,7 +112,7 @@ export class StreamingDownloadHandler {
    * 写入TAR头部信息
    */
   private async writeTarHeaders(
-    controller: ReadableStreamDefaultController,
+    controller: ReadableStreamDefaultController<Uint8Array>,
     manifest: DockerManifest,
     imageName: string
   ): Promise<void> {
